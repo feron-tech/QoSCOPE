@@ -4,9 +4,38 @@ import os
 if os.name == 'nt': # windows OS
     _ROOT_DIR='C:\\Pycharm\\Projects\\golden_unit'
 else: # linux OS
-    _ROOT_DIR='/home/simu5g/git/golden_unit'
+    _ROOT_DIR='/home/targetx/git/golden_unit'
+
+_CONDA_EXEC = '/home/targetx/anaconda3/envs/golden_unit/bin/python'
+
+# Namespace config - hardcoded 
+"""
+Helping bash script:
+
+echo "Available veth interfaces:"
+ip link show | grep veth
+
+echo "Available network interfaces:"
+ip link show
+
+echo "Check current IPs:"
+ip addr show veth-host
+ip addr show veth-ns
+
+echo "NetworkManager devices:"
+nmcli device status
+"""
+_NS_NAME = "appns"
+_VETH_HOST = "veth-host"
+_VETH_NS = "veth-ns"
+_HOST_IP = "10.200.1.1"
+_NS_IP = "10.200.1.2"
+_WWAN_IF = "wwan0"
 
 _LOCAL_TEST=False
+_SHARK_TEMP_OUT_FILE=os.path.join('/tmp/','mypcap.pcap')
+_SHARK_VIDEO_TIME_SEC=30
+_SHARK_VIDEO_PACKS=50
 ##################################################################
 
 ######################### fixed values (DO NOT ALTER!) ###############################
@@ -61,9 +90,7 @@ _RES_FILE_FIELDS_APP={
     'rtt': None,
     'drop_flag': None,
 }
-_SHARK_TEMP_OUT_FILE=os.path.join(_ROOT_DIR,'mypcap.pcap')
-_SHARK_VIDEO_TIME_SEC=1
-_SHARK_VIDEO_PACKS=2
+
 
 _RES_FILE_LOC_PHY_RAW=os.path.join(_DB_DIR,'phy_raw.json')
 

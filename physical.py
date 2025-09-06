@@ -481,7 +481,7 @@ def main(port='/dev/ttyUSB3',baud_rate=115200,command='AT',myapn='internet.vodaf
 
     ## 01 get mode
     mode_pref = my_modem.get_prefered_mode()
-    my_modem.set_prefered_mode("LTE:NR5G")
+    my_modem.set_prefered_mode("NR5G-SA")
     # log
     try:
         myjson_line['mode_pref'] = str(mode_pref)

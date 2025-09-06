@@ -69,7 +69,7 @@ app.layout = html.Div(children=[
                                 dbc.Col(
                                     [
                                         html.Div([
-                                            dcc.Input(id='ntw_client_ip', type='text', value='192.168.1.1',
+                                            dcc.Input(id='ntw_client_ip', type='text', value='10.1.1.2',
                                                       style={'width': '100%', 'font-size': 20}),
                                         ], style={'width': '100%', 'display': 'flex',
                                                   'align-items': 'left',
@@ -97,7 +97,7 @@ app.layout = html.Div(children=[
                                 dbc.Col(
                                     [
                                         html.Div([
-                                            dcc.Input(id='ntw_server_ip', type='text', value='192.000.200.117',
+                                            dcc.Input(id='ntw_server_ip', type='text', value='172.25.2.172',
                                                       style={'width': '100%', 'font-size': 20}),
                                         ], style={'width': '100%', 'display': 'flex',
                                                   'align-items': 'left',
@@ -125,7 +125,7 @@ app.layout = html.Div(children=[
                                 dbc.Col(
                                     [
                                         html.Div([
-                                            dcc.Input(id='ntw_apn', type='text', value='internet.vodafone.gr',
+                                            dcc.Input(id='ntw_apn', type='text', value='internet',
                                                       style={'width': '100%', 'font-size': 20}),
                                         ], style={'width': '100%', 'display': 'flex',
                                                   'align-items': 'left',
@@ -249,7 +249,7 @@ app.layout = html.Div(children=[
                                 dbc.Col(
                                     [
                                         html.Div([
-                                            dcc.Input(id='mes_exps', type='text', value='2',
+                                            dcc.Input(id='mes_exps', type='text', value='5000',
                                                       style={'width': '100%', 'font-size': 20}),
                                         ], style={'width': '100%', 'display': 'flex',
                                                   'align-items': 'left',
@@ -277,7 +277,7 @@ app.layout = html.Div(children=[
                                 dbc.Col(
                                     [
                                         html.Div([
-                                            dcc.Input(id='mes_repet', type='text', value='2',
+                                            dcc.Input(id='mes_repet', type='text', value='1',
                                                       style={'width': '100%', 'font-size': 20}),
                                         ], style={'width': '100%', 'display': 'flex',
                                                   'align-items': 'left',
@@ -305,7 +305,7 @@ app.layout = html.Div(children=[
                                 dbc.Col(
                                     [
                                         html.Div([
-                                            dcc.Input(id='mes_gap', type='text', value='0.015',
+                                            dcc.Input(id='mes_gap', type='text', value='0.010',
                                                       style={'width': '100%', 'font-size': 20}),
                                         ], style={'width': '100%', 'display': 'flex',
                                                   'align-items': 'left',
@@ -624,7 +624,7 @@ app.layout = html.Div(children=[
                                                     [
                                                         html.Div([
                                                             dcc.Input(id='exp_base_icmp_packets', type='text',
-                                                                      value='99',
+                                                                      value='100',
                                                                       style={'width': '100%', 'font-size': 20}),
                                                         ], style={'width': '100%', 'display': 'flex',
                                                                   'align-items': 'left',
@@ -753,7 +753,7 @@ app.layout = html.Div(children=[
                                                     [
                                                         html.Div([
                                                             dcc.Input(id='exp_base_udpping_packets', type='text',
-                                                                      value='101',
+                                                                      value='100',
                                                                       style={'width': '100%', 'font-size': 20}),
                                                         ], style={'width': '100%', 'display': 'flex',
                                                                   'align-items': 'left',
@@ -882,7 +882,7 @@ app.layout = html.Div(children=[
                                                     [
                                                         html.Div([
                                                             dcc.Input(id='exp_base_wamp_packets', type='text',
-                                                                      value='121',
+                                                                      value='100',
                                                                       style={'width': '100%', 'font-size': 20}),
                                                         ], style={'width': '100%', 'display': 'flex',
                                                                   'align-items': 'left',
@@ -1067,7 +1067,7 @@ app.layout = html.Div(children=[
                                                 dbc.Col(
                                                     [
                                                         html.Div([
-                                                            dcc.Input(id='exp_app_mqtt_interval_ms', type='text', value='21',
+                                                            dcc.Input(id='exp_app_mqtt_interval_ms', type='text', value='20',
                                                                       style={'width': '100%', 'font-size': 20}),
                                                         ], style={'width': '100%', 'display': 'flex',
                                                                   'align-items': 'left',
@@ -2014,4 +2014,4 @@ def update_graph_live(n_intervals):
 if __name__ == '__main__':
     print('(Frontend) DBG: Frontend initialized')
     helper=Helper()
-    app.run_server(host='0.0.0.0')
+    app.run(host='0.0.0.0')

@@ -4,7 +4,7 @@ import time
 import pandas as pd
 from helper import Helper
 import gparams
-from orchestrator import Orchestrator
+from orchestrator import Orchestrator, VethOrchestrator
 import socket
 import time
 import subprocess
@@ -19,6 +19,7 @@ from icmplib import SocketAddressError, SocketPermissionError
 from icmplib import SocketUnavailableError, SocketBroadcastError, TimeoutExceeded
 from icmplib import ICMPError, DestinationUnreachable, TimeExceeded
 from io import StringIO
+import psutil
 
 class Backend:
 	def __init__(self):
@@ -41,6 +42,16 @@ class Backend:
 		# run campaign
 		self.db_in_user = res # python translates str booleans to Python types
 		self.run_campaign()
+
+	def kill_process_tree(self,pid, including_parent=True):
+		parent = psutil.Process(pid)
+		children = parent.children(recursive=True)
+		for child in children:
+			child.kill()
+		gone, still_alive = psutil.wait_procs(children, timeout=5)
+		if including_parent:
+			parent.kill()
+			parent.wait(5)
 
 	def init_dbs(self):
 
@@ -194,7 +205,7 @@ class Backend:
 		self.get_app_video()
 		self.get_app_profinet()
 
-	def get_app_mqtt(self):
+	def get_app_mqtt_old(self):
 		try:
 			_enable=self.db_in_user['Experiment']['Application']['MQTT']['enable']
 			_payload_bytes=int(self.db_in_user['Experiment']['Application']['MQTT']['payload (bytes)'])
@@ -217,9 +228,8 @@ class Backend:
 
 		config_dict={
 			'app_name':'MQTT',
-			'client_app_image_name':'client_mqtt',
+			'client_app_cmd': './client_mqtt',
 			'camp_name':_camp_name,
-			'ports_dict':None,
 			'env':{
 				'ENV_SERVER_IP' : _server_ip,
 				'ENV_SERVER_PORT' : gparams._PORT_SERVER_MQTT1,
@@ -232,7 +242,91 @@ class Backend:
 
 		res=self.activate_app(config_dict=config_dict)
 
+
+	def get_app_mqtt(self):
+		try:
+			_enable = self.db_in_user['Experiment']['Application']['MQTT']['enable']
+			_payload_bytes = int(self.db_in_user['Experiment']['Application']['MQTT']['payload (bytes)'])
+			_interval_ms = float(self.db_in_user['Experiment']['Application']['MQTT']['interval (ms)'])
+			_shark_captime_sec = int(self.db_in_user['Experiment']['Application']['Wireshark']['capture time (sec)'])
+			_shark_max_packs = int(self.db_in_user['Experiment']['Application']['Wireshark']['max packets'])
+			_camp_name = self.db_in_user['Measurement']['Campaign name']
+			_server_ip = self.db_in_user['Network']['Server IP']
+
+			if _enable == 'False':
+				print('(Backend) DBG: MQTT test deactivated')
+				return None
+			else:
+				print('(Backend) DBG: Init MQTT test ................')
+		except Exception as ex:
+			print('(Backend) ERROR: Init MQTT: ' + str(ex))
+			return None
+
+		sleep_sec = _interval_ms * 1e-3
+
+		# Build command string to run your MQTT client script inside the namespace
+		mqtt_script_path = 'client_app_mqtt.py'  # adjust path accordingly
+		client_app_cmd = f"{gparams._CONDA_EXEC} {mqtt_script_path}"
+
+		config_dict = {
+			'app_name': 'MQTT',
+			'client_app_cmd': client_app_cmd,
+			'camp_name': _camp_name,
+			'env': {
+				'ENV_SERVER_IP': _server_ip,
+				'ENV_SERVER_PORT': '1883',
+				'SLEEP_SEC': sleep_sec,
+				'MAX_PAYLOAD_SIZE_BYTES': _payload_bytes
+			},
+			'shark_captime_sec': _shark_captime_sec,
+			'shark_max_packs': _shark_max_packs,
+		}
+
+		res = self.activate_app(config_dict=config_dict)
+
+
 	def get_app_video(self):
+		try:
+			_enable = self.db_in_user['Experiment']['Application']['Video']['enable']
+			_fps = int(self.db_in_user['Experiment']['Application']['Video']['fps'])
+			_width = int(self.db_in_user['Experiment']['Application']['Video']['width'])
+			_height = int(self.db_in_user['Experiment']['Application']['Video']['height'])
+			_shark_captime_sec = gparams._SHARK_VIDEO_TIME_SEC
+			_shark_max_packs = gparams._SHARK_VIDEO_PACKS
+			_camp_name = self.db_in_user['Measurement']['Campaign name']
+			_server_ip = self.db_in_user['Network']['Server IP']
+
+			if _enable == 'False':
+				print('(Backend) DBG: Video test deactivated')
+				return None
+			else:
+				print('(Backend) DBG: Init Video test ................')
+		except Exception as ex:
+			print('(Backend) ERROR: Init Video: ' + str(ex))
+			return None
+
+		video_script_path = 'client_app_video_ul.py'  # or whatever your video client script is called
+
+		client_app_cmd = f"{gparams._CONDA_EXEC} {video_script_path}"
+
+		config_dict = {
+			'app_name': 'video',
+			'client_app_cmd': client_app_cmd, 
+			'camp_name': _camp_name,
+			'env': {
+				'ENV_SERVER_IP': _server_ip,
+				'ENV_SERVER_PORT': str(gparams._PORT_SERVER_OPENCV),  # ensure it's a string
+				'ENV_FPS': str(_fps),
+				'ENV_FRAME_WIDTH': str(_width),
+				'ENV_FRAME_HEIGHT': str(_height),
+			},
+			'shark_captime_sec': _shark_captime_sec,
+			'shark_max_packs': _shark_max_packs,
+		}
+
+		return self.activate_app(config_dict=config_dict)
+
+	def get_app_video_old(self):
 		try:
 			_enable=self.db_in_user['Experiment']['Application']['Video']['enable']
 			_fps=int(self.db_in_user['Experiment']['Application']['Video']['fps'])
@@ -241,6 +335,7 @@ class Backend:
 			_shark_captime_sec=gparams._SHARK_VIDEO_TIME_SEC
 			_shark_max_packs=gparams._SHARK_VIDEO_PACKS
 			_camp_name=self.db_in_user['Measurement']['Campaign name']
+			_server_ip = self.db_in_user['Network']['Server IP']
 
 			if _enable == 'False':
 				print('(Backend) DBG: Video test deactivated')
@@ -255,11 +350,9 @@ class Backend:
 			'app_name':'video',
 			'client_app_image_name':'client_stream',
 			'camp_name': _camp_name,
-			'ports_dict':{
-				gparams._PORT_SERVER_OPENCV:gparams._PORT_SERVER_OPENCV
-			},
 			'env':{
-				'ENV_STREAM_PORT': gparams._PORT_SERVER_OPENCV,
+				'ENV_SERVER_IP': _server_ip,
+				'ENV_SERVER_PORT': gparams._PORT_SERVER_OPENCV,
 				'ENV_FPS' : _fps,
 				'ENV_FRAME_WIDTH' : _width,
 				'ENV_FRAME_HEIGHT' : _height
@@ -274,7 +367,69 @@ class Backend:
 		# todo: placeholder for profinet client
 		pass
 
-	def activate_app(self,config_dict):
+	def activate_app(self, config_dict):
+		try:
+			_app_name = config_dict['app_name']
+			_client_app_cmd = config_dict['client_app_cmd']  # <-- changed from image name to actual command line
+			_env = config_dict.get('env', {})
+			_shark_captime_sec = config_dict['shark_captime_sec']
+			_shark_max_packs = config_dict['shark_max_packs']
+			_camp_name = config_dict['camp_name']
+
+
+			print(f'(Backend) DBG: Activating app={_app_name} in namespace={gparams._NS_NAME}...')
+		except Exception as ex:
+			print(f'(Backend) ERROR: Activate app: {ex}')
+			
+		orch = VethOrchestrator()
+		orch.create_namespace(gparams._NS_NAME, gparams._VETH_HOST, gparams._VETH_NS, gparams._HOST_IP, gparams._NS_IP, gparams._WWAN_IF)
+		proc = orch.activate(client_app_cmd=_client_app_cmd, env=_env)
+
+		# Optionally wait or do pyshark capture on veth_host interface here
+		self.get_pyshark_kpis(my_iface=gparams._VETH_HOST, display_filter=None,
+						  max_packs=_shark_max_packs,
+						  captime_sec=_shark_captime_sec,
+						  camp_name=_camp_name,
+						  app_name=_app_name)        
+
+		print('(Backend) DBG: Stopping app gracefully...')
+		# Now stop the client app process if still running
+		if proc.poll() is None:  # process is still running
+			proc.terminate()      # or proc.kill() for force stop
+			proc.wait()           # wait for termination
+
+		print('(Backend) DBG: Deactivating app in the orchestrator...')
+		orch.deactivate(proc)
+
+	def activate_app_deprec(self, config_dict):
+		try:
+			_app_name = config_dict['app_name']
+			_client_app_cmd = config_dict['client_app_cmd']  # <-- changed from image name to actual command line
+			_env = config_dict.get('env', {})
+			_shark_captime_sec = config_dict['shark_captime_sec']
+			_shark_max_packs = config_dict['shark_max_packs']
+			_camp_name = config_dict['camp_name']
+			print(f'(Backend) DBG: Activating app={_app_name}...')
+		except Exception as ex:
+			print(f'(Backend) ERROR: Activate app: {ex}...')
+			return None
+
+		# activate app using veth orchestrator
+		orch = VethOrchestrator()
+		iface = orch.activate(command=_client_app_cmd, env=_env)  # note we pass command, not image name
+
+		# monitor stats on returned interface
+		self.get_pyshark_kpis(my_iface=iface, display_filter=None,
+							  max_packs=_shark_max_packs,
+							  captime_sec=_shark_captime_sec,
+							  camp_name=_camp_name,
+							  app_name=_app_name)
+
+		# deactivate app
+		orch.deactivate()
+
+
+	def activate_app_old(self,config_dict):
 		try:
 			_app_name=config_dict['app_name']
 			_client_app_image_name=config_dict['client_app_image_name']
@@ -289,7 +444,7 @@ class Backend:
 			return None
 
 		# activate app
-		orch = Orchestrator()
+		orch = VethOrchestrator()
 		if _ports_dict is None:
 			iface=orch.activate(image=_client_app_image_name, detach=True, env=_env)
 		else:
@@ -332,41 +487,112 @@ class Backend:
 		except Exception as ex:
 			print('(Backend) Warning: Temp capture remove='+str(ex))
 
-		attempt=1
-		res=None
-		while (res is None):
-			try:
-				print('(Backend) DBG: Initiate capture for veth='+str(my_iface)+' (attempt=' + str(attempt) + ')...')
-				if attempt > 1:
-					self.helper.wait(gparams._WAIT_SEC_BACKEND_READ_INPUT_SOURCES)
-				attempt = attempt + 1
+		if False: # old script for safety
+			attempt=1
+			res=None
+			while (res is None):
+				try:
+					print('(Backend) DBG: Initiate capture for veth='+str(my_iface)+' (attempt=' + str(attempt) + ')...')
+					if attempt > 1:
+						self.helper.wait(gparams._WAIT_SEC_BACKEND_READ_INPUT_SOURCES)
+					attempt = attempt + 1
 
-				cap = pyshark.LiveCapture(interface=my_iface, display_filter=display_filter,
-				                          output_file=gparams._SHARK_TEMP_OUT_FILE)
-				cap.sniff_continuously()
-				res=200
-			except:
-				if attempt >= 5:
-					print('(Backend) ERROR: Cannot find iface in Pyshark!')
-					res = 500
-		if res!=200:
+					cap = pyshark.LiveCapture(interface=my_iface, display_filter=display_filter,
+											  output_file=gparams._SHARK_TEMP_OUT_FILE)
+					cap.sniff_continuously()
+					res=200
+				except:
+					if attempt >= 5:
+						print('(Backend) ERROR: Cannot find iface in Pyshark!')
+						res = 500
+			if res!=200:
+				print('(Backend) ERROR: Exiting...')
+				return None
+
+
+			try:
+				print('(Backend) DBG: Capture for max packs='+str(max_packs)+' OR max duration (sec)='+str(captime_sec)+'...')
+				pack_cnt=0
+				start_time = time.time()
+				sniff_duration_sec=0
+
+				for pack in cap:
+					sniff_duration_sec=time.time() - start_time
+					if (pack_cnt>max_packs) or (sniff_duration_sec>captime_sec):
+						break
+					pack_cnt = pack_cnt + 1
+				print('(Backend) DBG: Capture OK, final pack_cnt='+str(pack_cnt)+',duration (sec)='+str(sniff_duration_sec))
+				print('(Backend) DBG: Breaking capture...')
+				cap.close()
+			except Exception as ex:
+				print('(Backend) ERROR during capture:'+str(ex))
+
+
+		try:
+			print(f'(Backend) DBG: Initiate capture for veth={my_iface} )...')
+			cap = pyshark.LiveCapture(interface=my_iface, display_filter=display_filter,
+									  output_file=gparams._SHARK_TEMP_OUT_FILE)
+
+			print(f'(Backend) DBG: Will capture for max packs={max_packs} OR max duration (sec)={captime_sec}...')
+
+			pack_cnt = 0
+			start_time = time.time()
+
+
+			for pack in cap.sniff_continuously():
+				sniff_duration_sec = time.time() - start_time
+				if pack_cnt > max_packs or sniff_duration_sec > captime_sec:
+					print('(Backend) DBG: Stopping capture loop due to limits.')
+					break
+				pack_cnt += 1
+
+			print(f'(Backend) DBG: Capture OK, final pack_cnt={pack_cnt}, duration (sec)={sniff_duration_sec}')
+
+			# Close capture gracefully
+			try:
+				print('Closing shark gracefully...')
+				# cap.close()
+			except Exception as e:
+				print(f"(Backend) Warning: error closing capture: {e}")
+
+			# Forcibly terminate tshark if still running
+			if hasattr(cap, '_running_processes'):
+				for proc in cap._running_processes:
+					# Check if it's a multiprocessing.Process instance
+					if hasattr(proc, 'is_alive'):
+						if proc.is_alive():
+							print(f'(Backend) DBG: Terminating multiprocessing.Process PID={proc.pid}...')
+							proc.terminate()
+							proc.join(timeout=5)
+							if proc.is_alive():
+								print(f'(Backend) DBG: Process PID={proc.pid} still alive after terminate/join.')
+					# Else fallback to subprocess.Popen handling
+					elif hasattr(proc, 'poll'):
+						if proc.poll() is None:
+							print(f'(Backend) DBG: Terminating subprocess.Popen PID={proc.pid}...')
+							proc.terminate()
+							try:
+								proc.wait(timeout=5)
+							except subprocess.TimeoutExpired:
+								print(f'(Backend) DBG: Killing subprocess.Popen PID={proc.pid} after timeout...')
+								proc.kill()
+								proc.wait()
+					else:
+						print(f'(Backend) Warning: Unknown process object type {type(proc)}')
+			else:
+				print('(Backend) Warning: no _running_processes attribute found in cap')
+
+
+			res = 200
+
+		except Exception as ex:
+			print(f'(Backend) ERROR during capture: {ex}')
+			res = 500
+
+		if res != 200:
 			print('(Backend) ERROR: Exiting...')
 			return None
 
-		try:
-			print('(Backend) DBG: Capture for max packs='+str(max_packs)+' OR max duration (sec)='+str(captime_sec)+'...')
-			pack_cnt=0
-			start_time = time.time()
-			sniff_duration_sec=0
-
-			for pack in cap:
-				sniff_duration_sec=time.time() - start_time
-				if (pack_cnt>max_packs) or (sniff_duration_sec>captime_sec):
-					break
-				pack_cnt = pack_cnt + 1
-			print('(Backend) DBG: Capture OK, final pack_cnt='+str(pack_cnt)+',duration (sec)='+str(sniff_duration_sec))
-		except Exception as ex:
-			print('(Backend) ERROR during capture:'+str(ex))
 
 		try:
 			min_sniff_timestamp=math.inf
@@ -781,7 +1007,9 @@ class Backend:
 				data_df['exp_id'] = str(self.cnt_exp)
 				data_df['timestamp'] = self.helper.get_str_timestamp()
 
-				data_df.to_json(gparams._RES_FILE_LOC_UDPPING,orient='records', lines=True)
+				with open(gparams._RES_FILE_LOC_UDPPING, 'a') as f:
+					data_df.to_json(f, orient='records', lines=True)
+				
 			except Exception as ex:
 				print('(Backend) ERROR: UDP ping write=' + str(ex))
 
@@ -864,7 +1092,9 @@ class Backend:
 				data_df['exp_id'] = str(self.cnt_exp)
 				data_df['timestamp'] = self.helper.get_str_timestamp()
 
-				data_df.to_json(gparams._RES_FILE_LOC_OWAMP,orient='records', lines=True)
+				with open(gparams._RES_FILE_LOC_OWAMP, 'a') as f:
+					data_df.to_json(f, orient='records', lines=True)				
+				
 			except Exception as ex:
 				print('(Backend) ERROR: OWAMP write=' + str(ex))
 
@@ -944,7 +1174,9 @@ class Backend:
 				data_df['exp_id'] = str(self.cnt_exp)
 				data_df['timestamp'] = self.helper.get_str_timestamp()
 
-				data_df.to_json(gparams._RES_FILE_LOC_TWAMP,orient='records', lines=True)
+				with open(gparams._RES_FILE_LOC_TWAMP, 'a') as f:
+					data_df.to_json(f, orient='records', lines=True)				
+								
 			except Exception as ex:
 				print('(Backend) ERROR: OWAMP write=' + str(ex))
 

@@ -23,11 +23,11 @@ mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 mqttc.on_publish = on_publish
 
 mqttc.user_data_set(unacked_publish)
-mqttc.connect(host='192.168.200.117', port=gparams._PORT_SERVER_MQTT1)
+mqttc.connect(host='172.25.2.172', port=gparams._PORT_SERVER_MQTT1)
 mqttc.loop_start()
 
 # Our application produce some messages
-msg_info = mqttc.publish(topic='golden_unit/test', payload='tsesssssssssssssssssssssssssss', qos=1)
+msg_info = mqttc.publish(topic='test/topic', payload='tsesssssssssssssssssssssssssss', qos=1)
 unacked_publish.add(msg_info.mid)
 
 
