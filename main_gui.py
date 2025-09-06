@@ -11,8 +11,30 @@ import zipfile
 import zlib
 import os
 import shutil
+from flask import Flask, jsonify, request
+from ai_module import AI
+
+ai=AI()
 # Initialize the app - constructor
 app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
+
+server = app.server  # Dash Flask server
+
+@server.route("/api/train", methods=["POST"])
+def api_train():
+    try:
+        ai.train()
+        return {"status": "success", "message": "Training completed"}
+    except Exception as e:
+        return {"status": "fail", "message": str(e)}, 500
+
+@server.route("/api/infer", methods=["POST"])
+def api_infer():
+    try:
+        result = ai.infer(single_step=True)
+        return {"status": "success", "result": result}
+    except Exception as e:
+        return {"status": "fail", "message": str(e)}, 500
 
 # App layout
 app.layout = html.Div(children=[
@@ -566,7 +588,7 @@ app.layout = html.Div(children=[
                                                 dbc.Col(
                                                     [
                                                         html.Div([
-                                                            dcc.Input(id='exp_base_icmp_payload_bytes', type='text', value='128',
+                                                            dcc.Input(id='exp_base_icmp_payload_bytes', type='text', value='64',
                                                                       style={'width': '100%', 'font-size': 20}),
                                                         ], style={'width': '100%', 'display': 'flex',
                                                                   'align-items': 'left',
@@ -595,7 +617,7 @@ app.layout = html.Div(children=[
                                                     [
                                                         html.Div([
                                                             dcc.Input(id='exp_base_icmp_interval_ms', type='text',
-                                                                      value='10',
+                                                                      value='20',
                                                                       style={'width': '100%', 'font-size': 20}),
                                                         ], style={'width': '100%', 'display': 'flex',
                                                                   'align-items': 'left',
@@ -695,7 +717,7 @@ app.layout = html.Div(children=[
                                                 dbc.Col(
                                                     [
                                                         html.Div([
-                                                            dcc.Input(id='exp_base_udpping_payload_bytes', type='text', value='256',
+                                                            dcc.Input(id='exp_base_udpping_payload_bytes', type='text', value='64',
                                                                       style={'width': '100%', 'font-size': 20}),
                                                         ], style={'width': '100%', 'display': 'flex',
                                                                   'align-items': 'left',
@@ -724,7 +746,7 @@ app.layout = html.Div(children=[
                                                     [
                                                         html.Div([
                                                             dcc.Input(id='exp_base_udpping_interval_ms', type='text',
-                                                                      value='15',
+                                                                      value='20',
                                                                       style={'width': '100%', 'font-size': 20}),
                                                         ], style={'width': '100%', 'display': 'flex',
                                                                   'align-items': 'left',
@@ -824,7 +846,7 @@ app.layout = html.Div(children=[
                                                 dbc.Col(
                                                     [
                                                         html.Div([
-                                                            dcc.Input(id='exp_base_wamp_payload_bytes', type='text', value='88',
+                                                            dcc.Input(id='exp_base_wamp_payload_bytes', type='text', value='64',
                                                                       style={'width': '100%', 'font-size': 20}),
                                                         ], style={'width': '100%', 'display': 'flex',
                                                                   'align-items': 'left',
@@ -853,7 +875,7 @@ app.layout = html.Div(children=[
                                                     [
                                                         html.Div([
                                                             dcc.Input(id='exp_base_wamp_interval_ms', type='text',
-                                                                      value='17',
+                                                                      value='20',
                                                                       style={'width': '100%', 'font-size': 20}),
                                                         ], style={'width': '100%', 'display': 'flex',
                                                                   'align-items': 'left',
@@ -1039,7 +1061,7 @@ app.layout = html.Div(children=[
                                                 dbc.Col(
                                                     [
                                                         html.Div([
-                                                            dcc.Input(id='exp_app_mqtt_payload_bytes', type='text', value='10000',
+                                                            dcc.Input(id='exp_app_mqtt_payload_bytes', type='text', value='64',
                                                                       style={'width': '100%', 'font-size': 20}),
                                                         ], style={'width': '100%', 'display': 'flex',
                                                                   'align-items': 'left',
@@ -1490,7 +1512,40 @@ app.layout = html.Div(children=[
 
                                                 html.Br(),
 
-                                                # Button
+                                                # Train button
+                                                html.Div([
+                                                    html.Button(id='button_train', n_clicks=0, children='Train Model',
+                                                                style={'font-size': '25px', 'width': '300px', 'display': 'inline-block',
+                                                                       'margin-bottom': '10px', 'margin-right': '5px', 'height': '60px',
+                                                                       'verticalAlign': 'top', 'color': 'rgb(255,215,0)',
+                                                                       'background-color': 'rgb(100,100,100)'}),
+                                                    html.Div(id='train_status', style={'margin-top': '5px', 'color': 'red'}),
+                                                ], style={'width': '100%', 'display': 'flex', 'align-items': 'center', 'justify-content': 'center'}),
+
+                                                # Inference button
+                                                html.Div([
+                                                    html.Button(id='button_infer', n_clicks=0, children='Run Inference',
+                                                                style={'font-size': '25px', 'width': '300px', 'display': 'inline-block',
+                                                                       'margin-bottom': '10px', 'margin-right': '5px', 'height': '60px',
+                                                                       'verticalAlign': 'top', 'color': 'rgb(255,215,0)',
+                                                                       'background-color': 'rgb(100,100,100)'}),
+                                                    html.Div(id='infer_output', style={'margin-top': '5px', 'whiteSpace': 'pre-wrap'}),
+                                                ], style={'width': '100%', 'display': 'flex', 'align-items': 'center', 'justify-content': 'center'}),
+
+
+                                                # Modal (for both train & inference messages)
+
+                                                dbc.Modal(
+                                                    [
+                                                        dbc.ModalHeader(dbc.ModalTitle("AI Status")),
+                                                        dbc.ModalBody(id="modal_body_train_infer"),
+                                                        dbc.ModalFooter(dbc.Button("Close", id="close_modal_train_infer", className="ml-auto")),
+                                                    ],
+                                                    id="modal_train_infer",
+                                                    is_open=False,
+                                                ),
+
+                                                # Button Save
                                                 html.Div([
                                                     html.Button(id='button_save', n_clicks=0, children='Save stats',
                                                                 style={'font-size': '25px', 'width': '300px', 'display': 'inline-block',
@@ -1705,6 +1760,41 @@ def toggle_modal(button_start, button_exit, is_open):
     if button_start or button_exit:
         return not is_open
     return is_open
+
+@app.callback(
+    Output("modal_train_infer", "is_open"),
+    Output("modal_body_train_infer", "children"),
+    Input("button_train", "n_clicks"),
+    Input("button_infer", "n_clicks"),
+    Input("close_modal_train_infer", "n_clicks"),
+    State("modal_train_infer", "is_open"),
+    prevent_initial_call=True
+)
+def handle_train_infer_modal(train_clicks, infer_clicks, close_clicks, is_open):
+    ctx = dash.callback_context
+    if not ctx.triggered:
+        return is_open, ""
+    button_id = ctx.triggered[0]["prop_id"].split(".")[0]
+
+    if button_id == "button_train":
+        try:
+            ai.train()  # synchronous; page freezes here
+            msg = "New training completed successfully!"
+        except Exception as e:
+            msg = f"Training failed: {str(e)}"
+        return True, msg
+    elif button_id == "button_infer":
+        try:
+            msg = ai.infer(single_step=True)
+        except Exception as e:
+            msg = f"Inference failed: {str(e)}"
+        return True, msg
+    elif button_id == "close_modal_train_infer":
+        return False, ""
+
+    return is_open, ""
+
+
 
 @callback(
     Output("download_save", "data"),
@@ -1963,7 +2053,6 @@ def update_graph_live(n_intervals):
         # marker_color='black'
     # )
 
-
     fig_my_app_delay.update_xaxes(
         # title_text="Time",
         # title_font={"size": 30,'color':'black'},
@@ -2014,4 +2103,4 @@ def update_graph_live(n_intervals):
 if __name__ == '__main__':
     print('(Frontend) DBG: Frontend initialized')
     helper=Helper()
-    app.run(host='0.0.0.0')
+    app.run_server(host='0.0.0.0')

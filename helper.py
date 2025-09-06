@@ -5,6 +5,8 @@ from time import mktime
 from datetime import datetime
 import random, string
 import json
+import os
+from pathlib import Path
 
 class Helper:
 
@@ -121,3 +123,75 @@ class Helper:
 		letters = string.ascii_lowercase+string.digits
 		return ''.join(random.choice(letters) for i in range(str_len))
 
+
+	def merge_multiple_logs(self,input_folders,out):
+		output_folder = Path(gparams._ROOT_DIR) / out
+		output_folder.mkdir(parents=True, exist_ok=True)
+
+		# Collect all files that exist in input folders
+		all_files = {}
+		for input_folder in input_folders:
+			folder_path = Path(gparams._ROOT_DIR) / input_folder
+			for file in folder_path.glob("*.json"):
+				all_files.setdefault(file.name, []).append(file)
+
+		# Merge each set of files
+		for filename, paths in all_files.items():
+			merged_lines = []
+			for path in paths:
+				with open(path) as f:
+					merged_lines.extend(f.readlines())
+
+			# sort by time key (safe in case logs overlap)
+			try:
+				merged_lines = sorted(
+					merged_lines,
+					key=lambda line: json.loads(line).get("time", "")
+				)
+			except Exception:
+				# if parsing fails, just keep file order
+				pass
+
+			# write to new folder
+			out_path = output_folder / filename
+			with open(out_path, "w") as f:
+				f.writelines(merged_lines)
+
+
+def test1():
+	my_in=[
+		'extra_logs/01_db_ntw',
+		 'extra_logs/02_db_ntw',
+		 'extra_logs/03_db_ntw',
+		 'extra_logs/04_db_ntw',
+		 'extra_logs/05_db_ntw',
+		'extra_logs/06_db_ntw',
+		'extra_logs/07_db_ntw',
+		'extra_logs/08_db_ntw',
+		'extra_logs/09_db_ntw',
+		'extra_logs/10_db_ntw',
+		'extra_logs/11_db_ntw',
+		 ]
+	my_out='new_db'
+	helper=Helper()
+	helper.merge_multiple_logs(input_folders=my_in,out=my_out)
+
+def test2():
+	my_in=[
+		'app_logs/01_db_app',
+		 'app_logs/02_db_app',
+		 'app_logs/03_db_app',
+		 'app_logs/04_db_app',
+		 'app_logs/05_db_app',
+		'app_logs/06_db_app',
+		'app_logs/07_db_app',
+		'app_logs/08_db_app',
+		'app_logs/09_db_app',
+		'app_logs/10_db_app',
+		'app_logs/11_db_app',
+		 ]
+	my_out='new_db'
+	helper=Helper()
+	helper.merge_multiple_logs(input_folders=my_in,out=my_out)
+
+test2()

@@ -2,13 +2,13 @@ import os
 
 #########################  input params  ########################
 if os.name == 'nt': # windows OS
-    _ROOT_DIR='C:\\Pycharm\\Projects\\golden_unit'
+    _ROOT_DIR='C:\\Pycharm\\Projects\\5G-BenchMotiv'
 else: # linux OS
-    _ROOT_DIR='/home/targetx/git/golden_unit'
+    _ROOT_DIR='/home/simu5g/git/golden_unit'
 
-_CONDA_EXEC = '/home/targetx/anaconda3/envs/golden_unit/bin/python'
+CONDA_EXEC = '/home/targetx/anaconda3/envs/golden_unit/bin/python'
 
-# Namespace config - hardcoded 
+# Namespace config - hardcoded
 """
 Helping bash script:
 
@@ -32,15 +32,15 @@ _HOST_IP = "10.200.1.1"
 _NS_IP = "10.200.1.2"
 _WWAN_IF = "wwan0"
 
+
 _LOCAL_TEST=False
-_SHARK_TEMP_OUT_FILE=os.path.join('/tmp/','mypcap.pcap')
-_SHARK_VIDEO_TIME_SEC=30
-_SHARK_VIDEO_PACKS=50
+
 ##################################################################
 
 ######################### fixed values (DO NOT ALTER!) ###############################
 # folder settings
 _DB_DIR=os.path.join(_ROOT_DIR,'db')
+_MODEL_DIR=os.path.join(_ROOT_DIR,'models')
 _UDPPING_ROOT=os.path.join(os.path.join(_ROOT_DIR,'client'),'udp-ping')
 _UDPPING_DELIMITER=';'
 _OWAMP_DELIMITER=';'
@@ -61,6 +61,38 @@ _PORT_CLIENT_GUI=8050
 _PORT_CLIENT_UDP_PING=1234
 ##################################################################
 
+######################### AI params ###############################
+_AI = {
+    "features": [
+        "icmp_min_rtt_ms","icmp_avg_rtt_ms","icmp_max_rtt_ms",
+        "icmp_packet_loss_0to1","icmp_jitter_ms",
+        "iperf_tcp_dl_retransmits","iperf_tcp_dl_sent_bps","iperf_tcp_dl_sent_bytes","iperf_tcp_dl_received_bps","iperf_tcp_dl_received_bytes",
+        "iperf_tcp_ul_retransmits","iperf_tcp_ul_sent_bps","iperf_tcp_ul_sent_bytes","iperf_tcp_ul_received_bps","iperf_tcp_ul_received_bytes",
+        "iperf_udp_dl_bytes","iperf_udp_dl_bps","iperf_udp_dl_jitter_ms","iperf_udp_dl_lost_percent",
+        "iperf_udp_ul_bytes","iperf_udp_ul_bps","iperf_udp_ul_jitter_ms","iperf_udp_ul_lost_percent",
+        "owamp_tx_err_perc_dl","owamp_tx_err_perc_ul","owamp_rx_err_perc_dl","owamp_rx_err_perc_ul",
+        "owamp_owamp_delay_ns_dl","owamp_owamp_delay_ns_ul",
+        "twamp_rtt_ns","twamp_fwd_delay_txrx_ns","twamp_rev_delay_rxtx_ns",
+        "tx_err_perc","tx_rx_err_perc","rx_err_perc","reflect_tx_err_perc",
+        "udpping_client2server_ns","udpping_server2client_ns","udpping_rtt_ns",
+        "app_rtt_ms_MQTT","app_rtt_ms_video","app_throughput_mbps_MQTT","app_throughput_mbps_video"
+        ],
+    "targets": ["iperf_tcp_ul_sent_bps", "iperf_tcp_dl_received_bps", "udpping_rtt_ns"],
+    "backup_features":[ "app_rtt_ms_MQTT","app_rtt_ms_video","app_throughput_mbps_MQTT","app_throughput_mbps_video"],
+    "train_samples": -2100,
+    "infer_samples":500,
+    "horizon": 10,
+    "timesteps": 50,
+    "hidden_units": 1024,
+    "num_lstm_layers": 1,
+    "activation": "relu",
+    "loss": "mae", #mse or mae
+    "optimizer": "adam",
+    "epochs": 75,
+    "batch_size": 32,
+    "scaler": "minmax", # standard or "minmax" or robust
+    "remove_app_features": True,
+}
 
 ######################### data schemas ###############################
 _RES_FILE_LOC_GUI_APP=os.path.join(_DB_DIR,'gui_app.json')
@@ -90,7 +122,9 @@ _RES_FILE_FIELDS_APP={
     'rtt': None,
     'drop_flag': None,
 }
-
+_SHARK_TEMP_OUT_FILE=os.path.join(_ROOT_DIR,'mypcap.pcap')
+_SHARK_VIDEO_TIME_SEC=1
+_SHARK_VIDEO_PACKS=2
 
 _RES_FILE_LOC_PHY_RAW=os.path.join(_DB_DIR,'phy_raw.json')
 
