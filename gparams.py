@@ -82,15 +82,15 @@ _AI = {
     "train_samples": -2100,
     "infer_samples":500,
     "horizon": 10,
-    "timesteps": 50,
-    "hidden_units": 1024,
-    "num_lstm_layers": 1,
+    "timesteps": 30,
+    "hidden_units": 512,
+    "num_lstm_layers": 2,
     "activation": "relu",
-    "loss": "mae", #mse or mae
+    "loss": "smooth", #mse or mae
     "optimizer": "adam",
     "epochs": 75,
     "batch_size": 32,
-    "scaler": "minmax", # standard or "minmax" or robust
+    "scaler": "standard", # standard or "minmax" or robust
     "remove_app_features": True,
 }
 

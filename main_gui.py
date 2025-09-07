@@ -13,6 +13,8 @@ import os
 import shutil
 from flask import Flask, jsonify, request
 from ai_module import AI
+import traceback
+from datetime import datetime
 
 ai=AI()
 # Initialize the app - constructor
@@ -20,21 +22,90 @@ app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 server = app.server  # Dash Flask server
 
+def get_request_info():
+    """Return standardized request info."""
+    return {
+        "endpoint": request.path,
+        "method": request.method,
+        "timestamp": pd.Timestamp.utcnow().isoformat()
+    }
+
 @server.route("/api/train", methods=["POST"])
 def api_train():
     try:
         ai.train()
-        return {"status": "success", "message": "Training completed"}
+        return {
+            "status": "success",
+            "summary": "AI training completed and model is ready for inference.",
+            "message": "Training completed successfully.",
+            "request_info": get_request_info()
+        }, 200
+    except PermissionError as e:
+        return {
+            "status": "fail",
+            "summary": "Insufficient permissions to perform training.",
+            "message": "Training failed due to insufficient permissions.",
+            "error_type": type(e).__name__,
+            "error_message": str(e),
+            "trace": traceback.format_exc(),
+            "request_info": get_request_info()
+        }, 403
     except Exception as e:
-        return {"status": "fail", "message": str(e)}, 500
+        return {
+            "status": "fail",
+            "summary": "AI server encountered an unexpected error during training.",
+            "message": "Training failed due to AI server failure.",
+            "error_type": type(e).__name__,
+            "error_message": str(e),
+            "trace": traceback.format_exc(),
+            "request_info": get_request_info()
+        }, 500
+
 
 @server.route("/api/infer", methods=["POST"])
 def api_infer():
     try:
         result = ai.infer(single_step=True)
-        return {"status": "success", "result": result}
+        return {
+            "status": "success",
+            "summary": "Inference completed successfully; predictions are available.",
+            "message": "Inference completed successfully.",
+            "result": result,
+            "request_info": get_request_info()
+        }, 200
+    except PermissionError as e:
+        return {
+            "status": "fail",
+            "summary": "Insufficient permissions to perform inference.",
+            "message": "Inference failed due to insufficient permissions.",
+            "error_type": type(e).__name__,
+            "error_message": str(e),
+            "trace": traceback.format_exc(),
+            "request_info": get_request_info()
+        }, 403
+    except FileNotFoundError as e:
+        return {
+            "status": "fail",
+            "summary": "Required model files not found; inference cannot proceed.",
+            "message": "Inference failed because the model or required files were not found.",
+            "error_type": type(e).__name__,
+            "error_message": str(e),
+            "trace": traceback.format_exc(),
+            "request_info": get_request_info()
+        }, 401
     except Exception as e:
-        return {"status": "fail", "message": str(e)}, 500
+        return {
+            "status": "fail",
+            "summary": "AI server encountered an unexpected error during inference.",
+            "message": "Inference failed due to AI server failure.",
+            "error_type": type(e).__name__,
+            "error_message": str(e),
+            "trace": traceback.format_exc(),
+            "request_info": get_request_info()
+        }, 500
+
+
+
 
 # App layout
 app.layout = html.Div(children=[

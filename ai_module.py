@@ -158,6 +158,7 @@ class AI:
         loss_map = {
             "mse": nn.MSELoss,
             "mae": nn.L1Loss,
+            "smooth": nn.SmoothL1Loss,
         }
 
         loss_name = config.get("loss", "mse").lower()
@@ -382,8 +383,3 @@ class AI:
             print(f"Rolling inference completed with metrics for targets: {list(result.keys())}")
             return metrics
 
-
-ai=AI()
-ai.train()
-a=ai.infer(single_step=False,plot_target='iperf_tcp_dl_received_bps',horizon_step=1)
-pprint(a)
