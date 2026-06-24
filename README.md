@@ -4,7 +4,7 @@
 Tested in Unix (ubuntu)
 ### Client-side
 ```python
-## Step 1: Download src code
+## Step 1: Download source code
 cd {GOLDEN_UNIT_ROOT} 
 git clone https://github.com/geodranas/golden_unit.git
 ```
