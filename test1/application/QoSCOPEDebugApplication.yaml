@@ -1,0 +1,82 @@
+# metadata
+appDescriptorId: appd-001
+appDescriptorExtInvariantId: example-appd-extinv-001
+appProvider: 123e4567-e89b-12d3-a456-426614174000
+appProductName: QoSCOPE-Measurement-Debug
+appSoftwareVersion: 1.0.0
+appDescriptorVersion: "1.0"
+appmInfo:
+  - Generic-ApplicationM
+
+swImageDesc:
+  - id: qoscope_measurement_image
+    name: qoscope-measurement-tools
+    version: latest
+    swImage: qoscope-measurement-tools
+    supportedVirtualisationEnviroment:
+      - docker
+
+osContainerDesc:
+  - osContainerDescId: qoscope_measurement_container
+    name: QoSCOPE Measurement Debug
+    description: QoSCOPE measurement-only deployment
+    requestedCpuResources: 1
+    requestedMemoryResource: 512
+    cpuResourceLimit: 1
+    memoryResourceLimit: 1024
+    swImageDesc: qoscope_measurement_image
+
+vdu:
+  - vduId: VDU_QoSCOPE_DEBUG
+    name: QoSCOPE-Measurement-Debug
+    description: Measurement-only debug deployment
+    mcioIdentificationData: helm
+    osContainerDesc:
+      - qoscope_measurement_container
+    virtualComputeDesc: test_virt_comp_desc
+
+deploymentFlavour:
+  - flavourId: df_default
+    description: Default deployment flavour
+
+    vduProfile:
+      - vduId: VDU_QoSCOPE_DEBUG
+        minNumberOfInstances: 1
+        maxNumberOfInstances: 1
+
+    istantiationLevel:
+      - levelId: default_level
+        description: Default instantiation level
+        vduLevel:
+          - vduId: VDU_QoSCOPE_DEBUG
+            numberOfInstances: 1
+
+    mciopProfile:
+      - mciopId: Artifacts/MCIOPs/qoscope-measurement-debug-0.1.0.tgz
+        associatedVdu:
+          - VDU_QoSCOPE_DEBUG
+
+appExtCpd:
+  - cpdId: ext
+    virtualCpd: measurement_connection_point
+
+virtualComputeDesc:
+  - virtualComputeDescId: test_virt_comp_desc
+    virtualMemory:
+      virtualMemSize: "4.0"
+    virtualCpu:
+      numVirtualCpu: 1
+
+virtualCpd:
+  - cpdId: measurement_connection_point
+    layerProtocol:
+      - IPV4
+    description: QoSCOPE measurement service
+    vdu:
+      - VDU_QoSCOPE_DEBUG
+    additionalServiceData:
+      - portData:
+          - name: iperf
+            protocol: TCP
+            port: 5201
+            portConfigurable: false
