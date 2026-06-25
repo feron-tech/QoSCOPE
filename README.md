@@ -103,7 +103,7 @@ docker run -it --rm -e ENV_SERVER_IP={GOLDEN_UNIT_CLIENT_IP} -e ENV_SERVER_PORT=
 ```
 
 ### Option 2: Server-side (helm)
-# Components
+#### Components
 The EaaS deployment runs:
 
 * `qoscope-measurement-tools`
@@ -119,7 +119,7 @@ The EaaS deployment runs:
   * UL video receiver logic
   * connects to the UE/video-source IP and port
 
-# Docker images
+#### Docker images
 The Helm chart expects the following images:
 
 ```text
@@ -128,7 +128,7 @@ ghcr.io/feron-tech/qoscope-server-stream:latest
 emqx/nanomq:latest
 ```
 
-# Configure the Helm chart before EaaS deployment
+#### Configure the Helm chart before EaaS deployment
 Edit:
 
 ```bash
@@ -157,7 +157,7 @@ services:
 
 `video.sourceIP` must be set to the reachable UE/video-source IP.
 
-# Rebuild the Helm package
+#### Rebuild the Helm package
 After changing `values.yaml`, rebuild the Helm `.tgz`:
 
 ```bash
@@ -171,7 +171,7 @@ This creates:
 qoscope-server-0.1.0.tgz
 ```
 
-# EaaS application package
+#### EaaS application package
 The EaaS application package should include:
 
 ```text
