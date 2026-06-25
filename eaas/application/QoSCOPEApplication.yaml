@@ -1,0 +1,91 @@
+# metadata
+appDescriptorId: appd-001
+appDescriptorExtInvariantId: example-appd-extinv-001
+appProvider: 123e4567-e89b-12d3-a456-426614174000
+appProductName: QoSCOPE
+appSoftwareVersion: 1.0.0
+appDescriptorVersion: "1.0"
+appmInfo:
+  - Generic-ApplicationM
+
+swImageDesc:
+  - id: qoscope_image_id
+    name: qoscope-server
+    version: latest
+    swImage: qoscope-server
+    supportedVirtualisationEnviroment:
+      - docker
+
+osContainerDesc:
+  - osContainerDescId: qoscope_container_desc_id
+    name: QoSCOPE Server
+    description: QoSCOPE server-side measurement platform
+    requestedCpuResources: 1
+    requestedMemoryResource: 586
+    cpuResourceLimit: 1
+    memoryResourceLimit: 1024
+    swImageDesc: qoscope_image_id
+
+vdu:
+  - vduId: VDU_QoSCOPE
+    name: QoSCOPE-Server
+    description: "Default VDU hosting QoSCOPE server-side services"
+    mcioIdentificationData: helm
+    osContainerDesc:
+      - qoscope_container_desc_id
+    virtualComputeDesc: test_virt_comp_desc
+
+deploymentFlavour:
+  - flavourId: df_default
+    description: Default deployment flavour for QoSCOPE
+
+    vduProfile:
+      - vduId: VDU_QoSCOPE
+        minNumberOfInstances: 1
+        maxNumberOfInstances: 4
+
+    istantiationLevel:
+      - levelId: default_level
+        description: Default instantiation level
+        vduLevel:
+          - vduId: VDU_QoSCOPE
+            numberOfInstances: 1
+
+    appLcmOperationsConfiguration:
+      instantiateVnfOpConfig:
+        parameter:
+          - key: zone
+            value: myzone
+          - key: videoSourceIP
+            value: "<SET_UE_IP_AT_DEPLOYMENT>"
+
+    mciopProfile:
+      - mciopId: Artifacts/MCIOPs/qoscope-server-0.1.0.tgz
+        associatedVdu:
+          - VDU_QoSCOPE
+
+appExtCpd:
+  - cpdId: ext
+    virtualCpd: qoscope_connection_point
+
+virtualComputeDesc:
+  - virtualComputeDescId: test_virt_comp_desc
+    virtualMemory:
+      virtualMemSize: "8.0"
+    virtualCpu:
+      numVirtualCpu: 2
+
+virtualCpd:
+  - cpdId: qoscope_connection_point
+    layerProtocol:
+      - IPV4
+      - IPV6
+    description: QoSCOPE MQTT service
+    vdu:
+      - VDU_QoSCOPE
+    additionalServiceData:
+      - portData:
+          - name: mqtt
+            protocol: TCP
+            port: 1883
+            portConfigurable: false
