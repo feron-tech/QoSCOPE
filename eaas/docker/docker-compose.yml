@@ -1,0 +1,22 @@
+services:
+  measurement-tools:
+    image: qoscope-measurement-tools:local
+    container_name: qoscope-measurement-tools
+    ports:
+      - "5201:5201/tcp"
+      - "5201:5201/udp"
+      - "1234:1234/udp"
+
+  nanomq:
+    image: emqx/nanomq:latest
+    container_name: qoscope-nanomq
+    ports:
+      - "1883:1883"
+      - "8883:8883"
+
+  server-stream:
+    image: qoscope-server-stream:local
+    container_name: qoscope-server-stream
+    environment:
+      ENV_SERVER_IP: "${VIDEO_SOURCE_IP:-127.0.0.1}"
+      ENV_SERVER_PORT: "${VIDEO_SOURCE_PORT:-8888}"

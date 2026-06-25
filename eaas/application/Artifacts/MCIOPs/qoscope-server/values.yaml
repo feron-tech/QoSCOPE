@@ -1,0 +1,15 @@
+images:
+  measurementTools: ghcr.io/feron-tech/qoscope-measurement-tools:latest
+  serverStream: ghcr.io/feron-tech/qoscope-server-stream:latest
+  nanomq: emqx/nanomq:latest
+
+video:
+  sourceIP: "PUT_UE_CLIENT_IP_HERE"
+  sourcePort: "8888"
+
+services:
+  iperfNodePortTcp: 32101
+  iperfNodePortUdp: 32102
+  udpPingNodePort: 32103
+  mqttNodePort: 32104
+  mqttsNodePort: 32105
