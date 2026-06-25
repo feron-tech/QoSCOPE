@@ -81,7 +81,7 @@ docker images # you should see all images generated
 ```
 
 ## Execution
-### Server-side
+### Option 1: Server-side (bare-metal)
 ```python
 # Terminal 1: Activate iperf
  iperf3 --server
@@ -102,7 +102,104 @@ docker run -it --rm -e ENV_SERVER_IP={GOLDEN_UNIT_CLIENT_IP} -e ENV_SERVER_PORT=
 (the streamer image needs to be regularly checked and occasionally restarted - check logs)
 ```
 
-### Client-side
+### Option 2: Server-side (helm)
+# Components
+The EaaS deployment runs:
+
+* `qoscope-measurement-tools`
+
+  * `iperf3` server on TCP/UDP `5201`
+  * `udp-ping` server on UDP `1234`
+* `NanoMQ`
+
+  * MQTT broker on TCP `1883`
+  * MQTTS on TCP `8883`
+* `qoscope-server-stream`
+
+  * UL video receiver logic
+  * connects to the UE/video-source IP and port
+
+# Docker images
+The Helm chart expects the following images:
+
+```text
+ghcr.io/feron-tech/qoscope-measurement-tools:latest
+ghcr.io/feron-tech/qoscope-server-stream:latest
+emqx/nanomq:latest
+```
+
+# Configure the Helm chart before EaaS deployment
+Edit:
+
+```bash
+eaas/application/Artifacts/MCIOPs/qoscope-server/values.yaml
+```
+
+Important fields:
+
+```yaml
+images:
+  measurementTools: ghcr.io/feron-tech/qoscope-measurement-tools:latest
+  serverStream: ghcr.io/feron-tech/qoscope-server-stream:latest
+  nanomq: emqx/nanomq:latest
+
+video:
+  sourceIP: "<UE_REACHABLE_IP>"
+  sourcePort: "8888"
+
+services:
+  iperfNodePortTcp: 32101
+  iperfNodePortUdp: 32102
+  udpPingNodePort: 32103
+  mqttNodePort: 32104
+  mqttsNodePort: 32105
+```
+
+`video.sourceIP` must be set to the reachable UE/video-source IP.
+
+# Rebuild the Helm package
+After changing `values.yaml`, rebuild the Helm `.tgz`:
+
+```bash
+cd eaas/application/Artifacts/MCIOPs
+helm package qoscope-server
+```
+
+This creates:
+
+```text
+qoscope-server-0.1.0.tgz
+```
+
+# EaaS application package
+The EaaS application package should include:
+
+```text
+application/
+├── QoSCOPEApplication.yaml
+├── QoSCOPEApplication.mf
+└── Artifacts/
+    └── MCIOPs/
+        └── qoscope-server-0.1.0.tgz
+```
+
+The application YAML must reference:
+
+```yaml
+mciopId: Artifacts/MCIOPs/qoscope-server-0.1.0.tgz
+```
+
+Then zip the application folder according to the EaaS example format:
+
+```bash
+cd eaas/application
+zip -r app.zip QoSCOPEApplication.yaml QoSCOPEApplication.mf Artifacts/
+```
+
+Upload `app.zip` to the EaaS platform.
+
+
+### Client-side (bare-metal)
 ```python
 # Terminal 1: Set root dir & activate tool
 cd /{GOLDEN_UNIT_ROOT}/golden_unit/
@@ -160,7 +257,6 @@ Download from GUI at client side: "Save stats" button
 cd /{GOLDEN_UNIT_ROOT}/golden_unit/ #At client-side
 <results are shown in the "db" folder>
 ```
-
 ## Output
 ### iperf test
 * File: iperf.json
