@@ -1,7 +1,0 @@
-images:
-  measurementTools: ghcr.io/feron-tech/qoscope-measurement-tools:latest
-
-services:
-  iperfNodePortTcp: 32101
-  iperfNodePortUdp: 32102
-  udpPingNodePort: 32103

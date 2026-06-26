@@ -1,0 +1,13 @@
+metadata:
+appd_id: nanomq-appd-001
+app_product_name: NanoMQApplication
+app_provider_id: 123e4567-e89b-12d3-a456-426614174000
+app_software_version: 1.0.0
+app_package_version: 1.0
+app_release_date_time: 2026-06-26T10:00:00+03:00
+appm_info: etsiappm:v2.3.1,0:nanomqAppm-1
+compatible_specification_versions: 2.7.1,3.1.1
+
+Source: NanoMQApplication.mf
+Source: NanoMQApplication.yaml
+Source: Artifacts/MCIOPs/nanomq.tgz

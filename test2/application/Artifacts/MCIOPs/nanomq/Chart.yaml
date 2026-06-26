@@ -1,0 +1,6 @@
+apiVersion: v2
+appVersion: "latest"
+description: A Helm chart for deploying a single NanoMQ MQTT broker container for EaaS testing
+name: nanomq
+type: application
+version: 0.1.0

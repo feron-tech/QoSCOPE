@@ -1,0 +1,88 @@
+# metadata
+appDescriptorId: nanomq-appd-001
+appDescriptorExtInvariantId: nanomq-appd-extinv-001
+appProvider: 123e4567-e89b-12d3-a456-426614174000
+appProductName: NanoMQApplication
+appSoftwareVersion: 1.0.0
+appDescriptorVersion: "1.0"
+appmInfo:
+  - Generic-ApplicationM
+
+swImageDesc:
+  - id: nanomq_image_id
+    name: nanomq
+    version: latest
+    swImage: emqx/nanomq:latest
+    supportedVirtualisationEnviroment:
+      - docker
+
+osContainerDesc:
+  - osContainerDescId: nanomq_container_desc_id
+    name: NanoMQ Container Descriptor
+    description: Public NanoMQ MQTT broker container
+    requestedCpuResources: 1
+    requestedMemoryResource: 256
+    cpuResourceLimit: 1
+    memoryResourceLimit: 512
+    swImageDesc: nanomq_image_id
+
+vdu:
+  - vduId: VDU_nanomq
+    name: NanoMQ-VDU
+    description: "Single-container NanoMQ MQTT broker"
+    mcioIdentificationData: helm
+    osContainerDesc:
+      - nanomq_container_desc_id
+    virtualComputeDesc: "nanomq_virt_comp_desc"
+
+deploymentFlavour:
+  - flavourId: df_nanomq
+    description: Default deployment flavour for NanoMQ test broker
+    vduProfile:
+      - vduId: VDU_nanomq
+        minNumberOfInstances: 1
+        maxNumberOfInstances: 1
+
+    istantiationLevel:
+      - levelId: default_level
+        description: Default instantiation level
+        vduLevel:
+          - vduId: VDU_nanomq
+            numberOfInstances: 1
+
+    appLcmOperationsConfiguration:
+      instantiateVnfOpConfig:
+        parameter:
+          - key: zone
+            value: myzone
+
+    mciopProfile:
+      - mciopId: Artifacts/MCIOPs/nanomq.tgz
+        associatedVdu:
+          - VDU_nanomq
+
+appExtCpd:
+  - cpdId: mqtt-ext
+    virtualCpd: nanomq_1883_connection_point
+
+virtualComputeDesc:
+  - virtualComputeDescId: "nanomq_virt_comp_desc"
+    virtualMemory:
+      virtualMemSize: "0.5"
+    virtualCpu:
+      numVirtualCpu: 1
+
+virtualCpd:
+  - cpdId: nanomq_1883_connection_point
+    layerProtocol:
+      - IPV4
+      - IPV6
+    description: connection point to NanoMQ MQTT broker on port 1883
+    vdu:
+      - VDU_nanomq
+    additionalServiceData:
+      - portData:
+        - name: mqtt
+          protocol: TCP
+          port: 1883
+          portConfigurable: false
