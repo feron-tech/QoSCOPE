@@ -1,0 +1,24 @@
+---
+experimentDescriptorIdentifier: nanomq_experiment
+designer: QoSCOPE
+experimentDescriptorName: NanoMQ Experiment
+experimentDescriptorInvariantId: nanomq_experiment
+appId:
+  - 
+experimentDf:
+  - experimentDfId: df_nanomq_experiment
+    flavourKey: nanomq_test_flavour
+    appProfile:
+      - appProfileId: nanomq_experiment_profile_1
+        appDescriptorId: 
+        appDescriptorExtInvariantId: nanomq-appd-extinv-001
+        flavourId: df_nanomq
+        instantiationLevel: default_level
+        minNumberOfInstances: 1
+        maxNumberOfInstances: 1
+    experimentInstantiationLevel:
+      - experimentLevelId: default_experiment_level
+        description: single NanoMQ broker experiment level
+        appToLevelMapping:
+          - appProfileId: nanomq_experiment_profile_1
+            numberOfInstances: 1
