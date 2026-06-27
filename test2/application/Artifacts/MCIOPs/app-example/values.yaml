@@ -1,5 +1,5 @@
 image:
-  repository: emqx/nanomq
+  repository: nginx
   tag: latest
   pullPolicy: IfNotPresent
 
