@@ -1,0 +1,30 @@
+---
+experimentDescriptorIdentifier: my_experiment
+designer: ExampleDesigner
+experimentDescriptorName: My Experiment
+experimentDescriptorInvariantId: my_experiment
+appId:
+  - {{ APP_ID }}
+experimentDf:
+  - experimentDfId: df_my_experiment
+    flavourKey: test_flavour
+    # The VnfProfile information element specifies a profile for instantiating VNFs of a particular NS DF according to a specific VNFD and VNF DF.
+    appProfile:
+      - appProfileId: experiment_profile_1
+        appDescriptorId: {{ APP_ID }}
+        appDescriptorExtInvariantId: appd-extinv-001
+        # References a flavour within the VNFD (DF)
+        flavourId: df_example_app
+        # Identifier of the instantiation level of the VNF DF to be used for instantiation.
+        instantiationLevel: default_level
+        # Minimum/maximum number of instances of the VNF based on this VNFD that is permitted to exist for this VnfProfile.
+        minNumberOfInstances: 1
+        maxNumberOfInstances: 1
+
+    # n NS level consists of a list of involved entities, i.e. VNFs, VLs and/or nested NSs.
+    experimentInstantiationLevel:
+      - experimentLevelId: default_experiment_level
+        description: simple experiment level
+        appToLevelMapping:
+          - appProfileId: experiment_profile_1
+            numberOfInstances: 1

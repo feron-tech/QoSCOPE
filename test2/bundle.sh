@@ -1,21 +1,20 @@
 #!/bin/env bash
-set -euo pipefail
 
-pushd application >/dev/null
-pushd Artifacts/MCIOPs >/dev/null
-tar -czvf nanomq.tgz nanomq
-popd >/dev/null
-zip -r app.zip * -x "Artifacts/MCIOPs/nanomq/*"
+pushd application
+pushd Artifacts/MCIOPs
+tar -czvf app-example.tgz app-example
+popd
+zip -r app.zip * -x "Artifacts/MCIOPs/app-example/*"
 mv app.zip ..
-popd >/dev/null
+popd
 
-echo "Application bundled: app.zip"
-read -p "Please provide the app id returned by the EaaS portal: " app_id
+echo "Application bundled."
+read -p "Please provided the app id: " app_id
 
-pushd experiment >/dev/null
-sed "s/{{ APP_ID }}/$app_id/g" < NanoMQExperiment.yaml.template > NanoMQExperiment.yaml
-zip experiment.zip NanoMQExperiment.mf NanoMQExperiment.yaml
+pushd experiment
+sed "s/{{ APP_ID }}/$app_id/" <MyExperiment.yaml.template > MyExperiment.yaml
+zip experiment.zip MyExperiment.mf MyExperiment.yaml
 mv experiment.zip ..
-popd >/dev/null
+popd
 
-echo "Experiment bundled: experiment.zip"
+echo "Experiment bundled. Bye."

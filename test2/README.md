@@ -1,60 +1,42 @@
-# EaaS NanoMQ single-container test
+# Example experiment for dutch trial site
 
-This is a minimal EaaS package structure based on the provided working example.
-It deploys one public Docker image:
+This is a simple python FastAPI app that exposes some endpoints that interact
+with the various parts of the dutch trial site.
 
-```text
-emqx/nanomq:latest
-```
+## Contents
 
-No application source code is included in `app.zip`; the Helm chart references the public container image directly.
+### [python_app](./python_app/)
 
-## Structure
+Contains a simple python web application that functions as a GUI to the various
+CAMARA APIs that are exposed in the cluster.
 
-```text
-application/
-  NanoMQApplication.mf
-  NanoMQApplication.yaml
-  Artifacts/MCIOPs/nanomq/
-    Chart.yaml
-    values.yaml
-    templates/deployment.yaml
+![Application screenshot](./python_app/static/ui.png)
 
-experiment/
-  NanoMQExperiment.mf
-  NanoMQExperiment.yaml.template
+This application is purposely left very limited in its features and serves
+mainly as an example of how to interact with the CAMARA APIs.
 
-bundle.sh
-```
+### [application](./application/)
 
-## Build packages
+Contains the contents of application archive. Inside is a [helm
+chart](./application/Artifacts/MCIOPs/app-example/), as well as the application
+metadata required by the EaaS platform.
 
-```bash
-chmod +x bundle.sh
-./bundle.sh
-```
+### [experiment](./experiment/)
 
-The script first creates:
+Contains the contents of an experiment archive.
 
-```text
-app.zip
-```
 
-Upload `app.zip` in the EaaS Applications tab. After the portal returns the Application ID, paste it into the script prompt. The script then creates:
+## Usage
 
-```text
-experiment.zip
-```
+All the parts of this repository listed above are prepared for use using
+[`bundle.sh`](./bundle.sh):
 
-Upload `experiment.zip` in the EaaS Experiments tab.
-
-## Exposed port
-
-The Helm service exposes MQTT TCP port `1883` through NodePort `32183`.
-If the EaaS cluster rejects this fixed NodePort, edit:
-
-```text
-application/Artifacts/MCIOPs/nanomq/values.yaml
-```
-
-and either change `nodePort` or remove it.
+1. Run the script to obtain the packaged application
+   ```
+   ./bundle.sh
+   ```
+2. Submit the resulting `app.zip` to the EaaS portal's application page.
+3. Now enter the obtained application id to the script. The script will build
+   an experiment that references your submitted application.
+4. Submit the resulting `experiment.zip` to the the EaaS portal's experiment
+   page.
