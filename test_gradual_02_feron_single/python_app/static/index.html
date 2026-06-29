@@ -1,0 +1,36 @@
+<!doctype html>
+<html>
+<head>
+<style>
+</style>
+</head>
+<body>
+    <h1>Clusters API</h1>
+    <button id="b-clusters">Get cluster names</button><br>
+    <textarea id="cluster_names" name="cluster_names" rows="4" cols="50" readonly autocomplete=off>
+    </textarea>
+    
+    <h1>QOS API</h1>
+    <form action="/request_qos" method="post">
+        10.45.0.<input type="number" min="2" max="254" id="metric" name="addr">
+        <input type="submit" value="Request QOS">
+    </form>
+
+    <h1>MQTT metrics</h1>
+    <form action="/post_mqtt_metric" method="post">
+        <label for="metric">Metric value</label> 
+        <input type="number" id="metric" name="value">
+        <input type="submit" value="Submit">
+    </form>
+
+    <script>
+        let button = document.getElementById("b-clusters");
+        let textfield = document.getElementById("cluster_names");
+        button.addEventListener("click", async function() {
+            let rsp = await fetch('/get_cluster_names');
+            let names = await rsp.json();
+            textfield.value = names.join("\n");
+        });
+    </script>
+</body>
+</html>

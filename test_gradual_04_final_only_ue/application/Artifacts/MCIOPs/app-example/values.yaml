@@ -1,0 +1,19 @@
+image:
+  repository: nginx
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: NodePort
+  port: 8080
+  targetPort: 80
+  nodePort: 32101
+
+images:
+  measurementTools: ghcr.io/feron-tech/qoscope-measurement-tools:latest
+  serverStream: ghcr.io/feron-tech/qoscope-server-stream:latest
+  nanomq: emqx/nanomq:latest
+
+video:
+  sourceIP: "PUT_UE_CLIENT_IP_HERE"
+  sourcePort: "8888"

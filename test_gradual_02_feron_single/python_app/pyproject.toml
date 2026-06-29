@@ -1,0 +1,37 @@
+[project]
+name = "dutch_trialsite_test_app"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.123.6",
+    "httpx>=0.28.1",
+    "paho-mqtt>=2.1.0",
+    "python-multipart>=0.0.20",
+    "uvicorn>=0.38.0",
+]
+
+[[project.authors]]
+name = "Rintse van de Vlasakker"
+
+[build-system]
+requires = ["uv_build>=0.8.12,<0.9.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "basedpyright>=1.31.2",
+    "ruff>=0.12.9",
+]
+
+[tool.ruff]
+line-length = 80
+
+[tool.ruff.lint]
+preview = true
+select = [
+    "F", # pyflakes
+    "E", # pycodestyle codes
+    "W", # pycodestyle warnings
+]

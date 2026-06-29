@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: example-app-service
+  labels:
+    app_matcher: example-app
+spec:
+  type: NodePort
+  ports:
+    - name: iperf-tcp
+      port: 5201
+      targetPort: 5201
+      nodePort: 32101
+      protocol: TCP
+    - name: iperf-udp
+      port: 5201
+      targetPort: 5201
+      nodePort: 32102
+      protocol: UDP
+    - name: udpping
+      port: 1234
+      targetPort: 1234
+      nodePort: 32103
+      protocol: UDP
+    - name: mqtt
+      port: 1883
+      targetPort: 1883
+      nodePort: 32104
+      protocol: TCP
+    - name: mqtts
+      port: 8883
+      targetPort: 8883
+      nodePort: 32105
+      protocol: TCP
+  selector:
+    app_matcher: example-app

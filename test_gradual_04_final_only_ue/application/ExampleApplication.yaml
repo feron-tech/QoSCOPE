@@ -1,0 +1,103 @@
+# metadata
+appDescriptorId: appd-001
+appDescriptorExtInvariantId: example-appd-extinv-001
+appProvider: 123e4567-e89b-12d3-a456-426614174000
+appProductName: ExampleApplication
+appSoftwareVersion: 1.0.0
+appDescriptorVersion: "1.0"
+appmInfo:
+  - Generic-ApplicationM
+
+swImageDesc: 
+  - id: example_image_id
+    name: example
+    version: latest
+    swImage: example
+    supportedVirtualisationEnviroment:
+      - docker
+osContainerDesc:
+  - osContainerDescId: example_container_desc_id
+    name: Example Desc
+    description: Example Container Descriptor
+    requestedCpuResources: 1
+    requestedMemoryResource: 586 #e.g in MB
+    cpuResourceLimit: 1
+    memoryResourceLimit: 1024
+    swImageDesc: example_image_id
+
+# 1) List of Virtual Deployment Unit(s) describing the deployment and operational behaviour of a ApplicationC.
+vdu:
+  - vduId: VDU_example
+    name: Example-VDU
+    description: "Default VDU hosting example script"
+    mcioIdentificationData: helm
+    osContainerDesc:
+      - example_container_desc_id
+    virtualComputeDesc: "test_virt_comp_desc"
+      
+
+# A list of Deployment Flavour (DF) describing a specific DF of a Application with specific requirements for capacity and performance
+deploymentFlavour:
+  - flavourId: df_example
+    description: Default Deployment flavour for example script
+    vduProfile:
+      - vduId: VDU_example
+        minNumberOfInstances: 1
+        maxNumberOfInstances: 4
+
+    # Describes a given level of resources to be instantiated within a DF in term of the number of ApplicationC instances to be created from each VDU, 
+    # the number of VIP CP instances and/or bit rate requirements.
+    istantiationLevel:
+      - levelId: default_level
+        description: Default istantiation level
+        vduLevel:
+          - vduId: VDU_example
+            numberOfInstances: 1
+
+    # Configuration parameters for the Application Lifecycle Management operations.
+    # This information element is a container for all attributes that affect the invocation of the Application Lifecycle Management operations, structured by operation.
+    appLcmOperationsConfiguration:
+      # Configuration parameters for the InstantiateVnf operation.
+      instantiateVnfOpConfig:
+        #Array of KVP requirements for Application-specific parameters to be passed when invoking the InstantiateVnf operation.
+        parameter:
+          - key: zone
+            value: myzone
+          - key: myattribute
+            value: myattribute
+
+    mciopProfile:
+      - mciopId: Artifacts/MCIOPs/app-example.tgz
+        associatedVdu:
+          - VDU_example
+
+# Describes external interface(s) exposed (VnfExtCpd)
+appExtCpd:
+  - cpdId: ext
+    virtualCpd: example_80_connection_point
+
+virtualComputeDesc:
+  - virtualComputeDescId: "test_virt_comp_desc"
+    virtualMemory: 
+      virtualMemSize: "8.0"
+    virtualCpu: 
+      numVirtualCpu: 2
+    
+# A list of virtual connection point allowing to access a set of ApplicationC instances
+virtualCpd:
+  - cpdId: example_80_connection_point
+    layerProtocol:
+      - IPV4
+      - IPV6
+    description: connection point to example service on port 80
+    #cpProtocol: -- can set IP
+    vdu: 
+      - VDU_example
+    # If the CP is exposed by a Application component realized by one or a set of OS containers, the properties are mirrored from
+    # the declarative descriptor of the corresponding MCIO where available
+    additionalServiceData: 
+      - portData:
+        - name: example_port
+          protocol: TCP
+          port: 80
+          portConfigurable: false

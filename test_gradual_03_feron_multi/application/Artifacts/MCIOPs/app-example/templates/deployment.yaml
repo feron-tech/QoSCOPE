@@ -1,0 +1,74 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: example-app-service
+  labels:
+    app_matcher: example-app
+spec:
+  type: NodePort
+  ports:
+    - name: example-app-nodeport
+      port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.targetPort }}
+      nodePort: {{ .Values.service.nodePort }}
+      protocol: TCP
+  selector:
+    app_matcher: example-app
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ci-registry-cred
+data:
+  .dockerconfigjson: 'ewogICAgICAgICJhdXRocyI6IHsKICAgICAgICAgICAgICAgICJjaS50bm8ubmw6NDU2NyI6IHsKICAgICAgICAgICAgICAgICAgICAgICAgImF1dGgiOiAiWjJsMGJHRmlLMlJsY0d4dmVTMTBiMnRsYmkweE1qQXhPbWRzWkhRdFZqaEJOMjlDUjJkdVRUUXpWMUJMVTBOcmRFUT0iCiAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgImNpLnRuby5ubCI6IHsKICAgICAgICAgICAgICAgICAgICAgICAgImF1dGgiOiAiWjJsMGJHRmlLMlJsY0d4dmVTMTBiMnRsYmkweE1qQXhPbWRzWkhRdFZqaEJOMjlDUjJkdVRUUXpWMUJMVTBOcmRFUT0iCiAgICAgICAgICAgICAgICB9CiAgICAgICAgfQp9Cg=='
+type: kubernetes.io/dockerconfigjson
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: example-app
+  labels:
+    app_matcher: example-app
+spec:
+  replicas: 1
+  serviceName: "example-app-service"
+  selector:
+    matchLabels:
+      app_matcher: example-app
+  template:
+    metadata:
+      labels:
+        app_matcher: example-app
+    spec:
+      containers:
+        - name: measurement-tools
+          image: {{ .Values.images.measurementTools }}
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5201
+              protocol: TCP
+            - containerPort: 5201
+              protocol: UDP
+            - containerPort: 1234
+              protocol: UDP
+
+        - name: nanomq
+          image: {{ .Values.images.nanomq }}
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 1883
+              protocol: TCP
+            - containerPort: 8883
+              protocol: TCP
+
+        - name: server-stream
+          image: {{ .Values.images.serverStream }}
+          imagePullPolicy: Always
+          env:
+            - name: ENV_SERVER_IP
+              value: "{{ .Values.video.sourceIP }}"
+            - name: ENV_SERVER_PORT
+              value: "{{ .Values.video.sourcePort }}"
+
+      imagePullSecrets:
+        - name: ci-registry-cred
