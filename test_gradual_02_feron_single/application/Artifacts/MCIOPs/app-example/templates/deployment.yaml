@@ -6,22 +6,40 @@ metadata:
     app_matcher: example-app
 spec:
   type: NodePort
-  ports:
-  - name: example-app-nodeport
-    port: {{ .Values.service.port }}
-    targetPort: {{ .Values.service.targetPort }}
-    nodePort: {{ .Values.service.nodePort }}
-    protocol: TCP
   selector:
     app_matcher: example-app
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: ci-registry-cred
-data:
-  .dockerconfigjson: 'ewogICAgICAgICJhdXRocyI6IHsKICAgICAgICAgICAgICAgICJjaS50bm8ubmw6NDU2NyI6IHsKICAgICAgICAgICAgICAgICAgICAgICAgImF1dGgiOiAiWjJsMGJHRmlLMlJsY0d4dmVTMTBiMnRsYmkweE1qQXhPbWRzWkhRdFZqaEJOMjlDUjJkdVRUUXpWMUJMVTBOcmRFUT0iCiAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgImNpLnRuby5ubCI6IHsKICAgICAgICAgICAgICAgICAgICAgICAgImF1dGgiOiAiWjJsMGJHRmlLMlJsY0d4dmVTMTBiMnRsYmkweE1qQXhPbWRzWkhRdFZqaEJOMjlDUjJkdVRUUXpWMUJMVTBOcmRFUT0iCiAgICAgICAgICAgICAgICB9CiAgICAgICAgfQp9Cg=='
-type: kubernetes.io/dockerconfigjson
+  ports:
+    - name: iperf3-tcp
+      port: 5201
+      targetPort: 5201
+      nodePort: {{ .Values.service.iperfTcpNodePort }}
+      protocol: TCP
+    - name: iperf3-udp
+      port: 5201
+      targetPort: 5201
+      nodePort: {{ .Values.service.iperfUdpNodePort }}
+      protocol: UDP
+    - name: udp-ping
+      port: 1234
+      targetPort: 1234
+      nodePort: {{ .Values.service.udpPingNodePort }}
+      protocol: UDP
+    - name: owamp
+      port: 861
+      targetPort: 861
+      nodePort: {{ .Values.service.owampNodePort }}
+      protocol: TCP
+    - name: twamp
+      port: 862
+      targetPort: 862
+      nodePort: {{ .Values.service.twampNodePort }}
+      protocol: TCP
+    - name: pscheduler
+      port: 8760
+      targetPort: 8760
+      nodePort: {{ .Values.service.pschedulerNodePort }}
+      protocol: TCP
+
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -43,7 +61,23 @@ spec:
       containers:
         - name: example-app
           image: {{ index .Values "image" "repository" }}:{{ index .Values "image" "tag" }}
+          imagePullPolicy: {{ index .Values "image" "pullPolicy" }}
           ports:
-            - containerPort: 80
-      imagePullSecrets:
-          - name: ci-registry-cred
+            - name: iperf3-tcp
+              containerPort: 5201
+              protocol: TCP
+            - name: iperf3-udp
+              containerPort: 5201
+              protocol: UDP
+            - name: udp-ping
+              containerPort: 1234
+              protocol: UDP
+            - name: owamp
+              containerPort: 861
+              protocol: TCP
+            - name: twamp
+              containerPort: 862
+              protocol: TCP
+            - name: pscheduler
+              containerPort: 8760
+              protocol: TCP

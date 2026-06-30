@@ -5,6 +5,9 @@ image:
 
 service:
   type: NodePort
-  port: 8080
-  targetPort: 80
-  nodePort: 32101
+  iperfTcpNodePort: 32402
+  iperfUdpNodePort: 32403
+  udpPingNodePort: 32404
+  owampNodePort: 32405
+  twampNodePort: 32406
+  pschedulerNodePort: 32407
