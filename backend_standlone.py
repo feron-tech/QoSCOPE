@@ -91,8 +91,11 @@ RES_FILE_FIELDS_GUI_APP = {
 
 RES_FILE_FIELDS_UDPPING = [
     "seq",
-    "tx_time_ns",
-    "rx_time_ns",
+    "send_time_ns",
+    "server_time_ns",
+    "receive_time_ns",
+    "client_to_server_ns",
+    "server_to_client_ns",
     "rtt_ns",
 ]
 
@@ -984,7 +987,8 @@ class Backend:
 
             out = subprocess.check_output(cmd, cwd=self.args.udpping_root)
 
-            my_strs = str(out).split("(all times in ns)")
+            out = out.decode(errors="replace")
+            my_strs = out.split("RTT (all times in ns)")
             temp_str = my_strs[1].split("out of")
             final_str = temp_str[0]
             final_str = final_str.replace("\\n", "$")
