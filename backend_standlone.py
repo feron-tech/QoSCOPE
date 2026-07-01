@@ -852,13 +852,31 @@ class Backend:
         result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         output = result.stdout
 
+        print("(Monitor) iperf3 command=" + " ".join(cmd))
+        print("(Monitor) iperf3 returncode=" + str(result.returncode))
+
+        if result.returncode != 0:
+            print("(Monitor) iperf3 stdout=" + str(result.stdout))
+            print("(Monitor) iperf3 stderr=" + str(result.stderr))
+            return None
+
         try:
             data = json.loads(output)
+
+            if "end" not in data or not data["end"]:
+                print("(Monitor) ERROR: iperf3 JSON has empty/missing end section")
+                print("(Monitor) iperf3 command=" + " ".join(cmd))
+                print("(Monitor) iperf3 stdout=" + str(result.stdout))
+                print("(Monitor) iperf3 stderr=" + str(result.stderr))
+                return None
+
             return data
+
         except Exception as ex:
             print("(Monitor) ERROR in iperf3 output json=" + str(ex))
-            if result.stderr:
-                print("(Monitor) iperf3 stderr=" + str(result.stderr))
+            print("(Monitor) iperf3 command=" + " ".join(cmd))
+            print("(Monitor) iperf3 stdout=" + str(result.stdout))
+            print("(Monitor) iperf3 stderr=" + str(result.stderr))
             return None
 
     def get_icmp(self):
