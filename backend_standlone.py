@@ -254,7 +254,7 @@ class Backend:
                 "client_app_cmd": client_app_cmd,
                 "camp_name": self.args.campaign,
                 "env": {
-                    "ENV_SERVER_IP": self.args.server_ip,
+                    "ENV_SERVER_IP": self.args.mqtt_server_ip or self.args.server_ip,
                     "ENV_SERVER_PORT": str(self.args.mqtt_port),
                     "SLEEP_SEC": str(sleep_sec),
                     "MAX_PAYLOAD_SIZE_BYTES": str(self.args.mqtt_payload_bytes),
@@ -284,7 +284,7 @@ class Backend:
                 "client_app_cmd": client_app_cmd,
                 "camp_name": self.args.campaign,
                 "env": {
-                    "ENV_SERVER_IP": self.args.server_ip,
+                    "ENV_SERVER_IP": self.args.video_server_ip or self.args.server_ip,
                     "ENV_SERVER_PORT": str(self.args.video_port),
                     "ENV_FPS": str(self.args.video_fps),
                     "ENV_FRAME_WIDTH": str(self.args.video_width),
@@ -674,7 +674,7 @@ class Backend:
             payload_bytes = self.args.iperf_payload_bytes
             target_rate_mbps = self.args.iperf_bitrate_mbps
             duration_sec = self.args.iperf_duration
-            server_ip = self.args.server_ip
+            server_ip = self.args.iperf_server_ip or self.args.server_ip
             camp_name = self.args.campaign
 
         except Exception as ex:
@@ -847,7 +847,7 @@ class Backend:
             payload_bytes = self.args.icmp_payload_bytes
             interval_ms = self.args.icmp_interval_ms
             packets = self.args.icmp_packets
-            server_ip = self.args.server_ip
+            server_ip = self.args.icmp_server_ip or self.args.server_ip
             camp_name = self.args.campaign
 
         except Exception as ex:
@@ -932,7 +932,7 @@ class Backend:
             payload_bytes = self.args.udpping_payload_bytes
             interval_ms = self.args.udpping_interval_ms
             packets = self.args.udpping_packets
-            server_ip = self.args.server_ip
+            server_ip = self.args.udpping_server_ip or self.args.server_ip
             camp_name = self.args.campaign
 
         except Exception as ex:
@@ -978,6 +978,8 @@ class Backend:
             cmd.append("./udpClient")
             cmd.append("-a")
             cmd.append(str(server_ip))
+            cmd.append("-p")
+            cmd.append(str(port))
             cmd.append("-s")
             cmd.append(str(payload_bytes))
             cmd.append("-n")
@@ -986,8 +988,8 @@ class Backend:
             cmd.append(str(interval_ms))
 
             out = subprocess.check_output(cmd, cwd=self.args.udpping_root)
-
             out = out.decode(errors="replace")
+
             my_strs = out.split("RTT (all times in ns)")
             temp_str = my_strs[1].split("out of")
             final_str = temp_str[0]
@@ -996,7 +998,12 @@ class Backend:
             final_str = final_str.replace("$", "\n")
 
             df_str = StringIO(final_str)
-            df = pd.read_table(df_str, sep=self.args.udpping_delimiter, header=None)
+            df = pd.read_table(df_str, sep=self.args.udpping_delimiter, header=None, engine="python")
+            df = df.dropna(axis=1, how="all")
+            if len(df.columns) != len(RES_FILE_FIELDS_UDPPING):
+                print("(Backend) ERROR cannot process udpPing=unexpected columns " + str(len(df.columns)) + ", expected " + str(len(RES_FILE_FIELDS_UDPPING)))
+                print(final_str)
+                return None
             df.columns = RES_FILE_FIELDS_UDPPING
 
             temp_df = df.head(1)
@@ -1019,7 +1026,7 @@ class Backend:
             payload_bytes = self.args.wamp_payload_bytes
             interval_ms = self.args.wamp_interval_ms
             packets = self.args.wamp_packets
-            server_ip = self.args.server_ip
+            server_ip = self.args.owamp_server_ip or self.args.server_ip
             camp_name = self.args.campaign
 
         except Exception as ex:
@@ -1079,7 +1086,7 @@ class Backend:
             output = output.replace("$", "\n")
 
             df_str = StringIO(output)
-            df = pd.read_table(df_str, sep=self.args.owamp_delimiter, header=None)
+            df = pd.read_table(df_str, sep=self.args.owamp_delimiter, header=None, engine="python")
             df.columns = RES_FILE_FIELDS_OWAMP
 
             df["is_previous_larger"] = (
@@ -1112,7 +1119,7 @@ class Backend:
             payload_bytes = self.args.wamp_payload_bytes
             interval_ms = self.args.wamp_interval_ms
             packets = self.args.wamp_packets
-            server_ip = self.args.server_ip
+            server_ip = self.args.twamp_server_ip or self.args.server_ip
             camp_name = self.args.campaign
 
         except Exception as ex:
@@ -1172,7 +1179,7 @@ class Backend:
             output = output.replace("$", "\n")
 
             df_str = StringIO(output)
-            df = pd.read_table(df_str, sep=self.args.twamp_delimiter, header=None)
+            df = pd.read_table(df_str, sep=self.args.twamp_delimiter, header=None, engine="python")
             df.columns = RES_FILE_FIELDS_TWAMP
 
             print("(Backend) DBG TWAMP tx sync status=" + str(df[self.args.owamp_dbg_key_word].mean()))
@@ -1187,6 +1194,13 @@ def parse_args():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--server-ip", required=True)
+    parser.add_argument("--iperf-server-ip", default=None)
+    parser.add_argument("--icmp-server-ip", default=None)
+    parser.add_argument("--udpping-server-ip", default=None)
+    parser.add_argument("--owamp-server-ip", default=None)
+    parser.add_argument("--twamp-server-ip", default=None)
+    parser.add_argument("--mqtt-server-ip", default=None)
+    parser.add_argument("--video-server-ip", default=None)
     parser.add_argument("--campaign", default="test")
     parser.add_argument("--interval", type=float, default=0.0)
     parser.add_argument("--once", action="store_true")
@@ -1220,7 +1234,7 @@ def parse_args():
     parser.add_argument("--udpping-interval-ms", type=int, default=20)
     parser.add_argument("--udpping-packets", type=int, default=5000)
     parser.add_argument("--udpping-port", type=int, default=1234)
-    parser.add_argument("--udpping-delimiter", default=r"\s+")
+    parser.add_argument("--udpping-delimiter", default=";")
 
     parser.add_argument("--owamp-enable", action="store_true")
     parser.add_argument("--twamp-enable", action="store_true")
