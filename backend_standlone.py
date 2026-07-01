@@ -737,12 +737,17 @@ class Backend:
 
             if data is not None:
                 try:
-                    myjson_line["tcp_ul_retransmits"] = data["end"]["sum_sent"]["retransmits"]
-                    myjson_line["tcp_ul_sent_bps"] = data["end"]["sum_sent"]["bits_per_second"]
-                    myjson_line["tcp_ul_sent_bytes"] = data["end"]["sum_sent"]["bytes"]
-                    myjson_line["tcp_ul_received_bps"] = data["end"]["sum_received"]["bits_per_second"]
-                    myjson_line["tcp_ul_received_bytes"] = data["end"]["sum_received"]["bytes"]
-                    print("(Backend) DBG: TCP uplink bps " + str(myjson_line["tcp_ul_received_bps"]))
+                    end = data.get("end", {})
+                    print("(Backend) DBG: TCP UL end keys=" + str(list(end.keys())))
+
+                    sum_sent = end.get("sum_sent", end.get("sum", {}))
+                    sum_received = end.get("sum_received", end.get("sum", {}))
+
+                    myjson_line["tcp_ul_retransmits"] = sum_sent.get("retransmits")
+                    myjson_line["tcp_ul_sent_bps"] = sum_sent.get("bits_per_second")
+                    myjson_line["tcp_ul_sent_bytes"] = sum_sent.get("bytes")
+                    myjson_line["tcp_ul_received_bps"] = sum_received.get("bits_per_second")
+                    myjson_line["tcp_ul_received_bytes"] = sum_received.get("bytes")
                 except Exception as ex:
                     print("(Backend) ERROR: TCP uplink write " + str(ex))
 
@@ -781,11 +786,15 @@ class Backend:
 
             if data is not None:
                 try:
-                    myjson_line["udp_ul_bytes"] = data["end"]["sum"]["bytes"]
-                    myjson_line["udp_ul_bps"] = data["end"]["sum"]["bits_per_second"]
-                    myjson_line["udp_ul_jitter_ms"] = data["end"]["sum"]["jitter_ms"]
-                    myjson_line["udp_ul_lost_percent"] = data["end"]["sum"]["lost_percent"]
-                    print("(Backend) DBG: UDP uplink bps " + str(myjson_line["udp_ul_bps"]))
+                    end = data.get("end", {})
+                    print("(Backend) DBG: UDP UL end keys=" + str(list(end.keys())))
+
+                    sum_udp = end.get("sum", end.get("sum_sent", end.get("sum_received", {})))
+
+                    myjson_line["udp_ul_bytes"] = sum_udp.get("bytes")
+                    myjson_line["udp_ul_bps"] = sum_udp.get("bits_per_second")
+                    myjson_line["udp_ul_jitter_ms"] = sum_udp.get("jitter_ms")
+                    myjson_line["udp_ul_lost_percent"] = sum_udp.get("lost_percent")
                 except Exception as ex:
                     print("(Backend) ERROR: UDP uplink write " + str(ex))
 
