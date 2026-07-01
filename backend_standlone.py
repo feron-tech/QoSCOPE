@@ -713,6 +713,8 @@ class Backend:
                 bitrate=None,
                 pack_len=payload_bytes,
             )
+            
+            time.sleep(2)
 
             if data is not None:
                 try:
@@ -734,6 +736,8 @@ class Backend:
                 bitrate=None,
                 pack_len=payload_bytes,
             )
+            
+            time.sleep(2)
 
             if data is not None:
                 try:
@@ -763,6 +767,8 @@ class Backend:
                 bitrate=bitrate,
                 pack_len=payload_bytes,
             )
+            
+            time.sleep(2)
 
             if data is not None:
                 try:
@@ -783,6 +789,8 @@ class Backend:
                 bitrate=bitrate,
                 pack_len=payload_bytes,
             )
+            
+            time.sleep(2)
 
             if data is not None:
                 try:
