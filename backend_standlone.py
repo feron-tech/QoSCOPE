@@ -101,16 +101,32 @@ RES_FILE_FIELDS_UDPPING = [
 
 RES_FILE_FIELDS_OWAMP = [
     "seq",
-    "send_time",
-    "delay",
-    "sync",
+    "tx_timestamp",
+    "tx_sync",
+    "tx_error_estimate",
+    "rx_timestamp",
+    "rx_sync",
+    "rx_error_estimate",
+    "ttl",
 ]
 
 RES_FILE_FIELDS_TWAMP = [
-    "seq",
-    "send_time",
-    "delay",
-    "sync",
+    "fw_seq",
+    "fw_tx_timestamp",
+    "fw_tx_sync",
+    "fw_tx_error_estimate",
+    "fw_rx_timestamp",
+    "fw_rx_sync",
+    "fw_rx_error_estimate",
+    "fw_ttl",
+    "rv_seq",
+    "rv_tx_timestamp",
+    "rv_tx_sync",
+    "rv_tx_error_estimate",
+    "rv_rx_timestamp",
+    "rv_rx_sync",
+    "rv_rx_error_estimate",
+    "rv_ttl",
 ]
 
 
@@ -1081,27 +1097,25 @@ class Backend:
 
             result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
             output = result.stdout
-            output = output.replace(" ", self.args.owamp_delimiter)
-            output = output.replace("\n", "$")
-            output = output.replace("$", "\n")
-
             df_str = StringIO(output)
-            df = pd.read_table(df_str, sep=self.args.owamp_delimiter, header=None, engine="python")
+            df = pd.read_table(df_str, sep=r"\s+", header=None, engine="python")
+            df = df.dropna(axis=1, how="all")
+
+            if len(df.columns) != len(RES_FILE_FIELDS_OWAMP):
+                print("(Backend) ERROR: OWAMP unexpected columns=" + str(len(df.columns)))
+                print(output)
+                return None
+
             df.columns = RES_FILE_FIELDS_OWAMP
 
-            df["is_previous_larger"] = (
-                df[self.args.owamp_key_word].shift(1) > df[self.args.owamp_key_word]
-            ).astype(int)
+            df["direction"] = "unknown"
+            sep_idx = df.index[df["seq"].diff() < 0].tolist()
+            if sep_idx:
+                sep = sep_idx[0]
+                df.loc[:sep - 1, "direction"] = "fw"
+                df.loc[sep:, "direction"] = "rv"
 
-            mylist = df.index[df["is_previous_larger"] == 1].tolist()
-            df = df.drop("is_previous_larger", axis=1)
-
-            if mylist:
-                sep_raw = mylist[0]
-                df.loc[:sep_raw, "direction"] = "ul"
-                df.loc[sep_raw:, "direction"] = "dl"
-
-            print("(Backend) DBG OWAMP tx sync status=" + str(df[self.args.owamp_dbg_key_word].mean()))
+            print("(Backend) DBG OWAMP tx sync status=" + str(df["tx_sync"].mean()))
             return df
 
         except Exception as ex:
@@ -1174,15 +1188,19 @@ class Backend:
 
             result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
             output = result.stdout
-            output = output.replace(" ", self.args.twamp_delimiter)
-            output = output.replace("\n", "$")
-            output = output.replace("$", "\n")
-
             df_str = StringIO(output)
-            df = pd.read_table(df_str, sep=self.args.twamp_delimiter, header=None, engine="python")
+            df = pd.read_table(df_str, sep=r"\s+", header=None, engine="python")
+            df = df.dropna(axis=1, how="all")
+
+            if len(df.columns) != len(RES_FILE_FIELDS_TWAMP):
+                print("(Backend) ERROR: TWAMP unexpected columns=" + str(len(df.columns)))
+                print(output)
+                return None
+
             df.columns = RES_FILE_FIELDS_TWAMP
 
-            print("(Backend) DBG TWAMP tx sync status=" + str(df[self.args.owamp_dbg_key_word].mean()))
+            print("(Backend) DBG TWAMP fw tx sync status=" + str(df["fw_tx_sync"].mean()))
+            print("(Backend) DBG TWAMP rv tx sync status=" + str(df["rv_tx_sync"].mean()))
             return df
 
         except Exception as ex:
